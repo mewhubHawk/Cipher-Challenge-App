@@ -1,0 +1,76 @@
+/* Primary Indigo color */
+body {
+    background-color: #E8EAF6; /* Light Indigo background */
+    font-family: 'Roboto', sans-serif;
+}
+
+.header {
+    background-color: #3F51B5; /* Indigo */
+    color: #FFFFFF;
+    padding: 10px;
+    text-align: center;
+    font-size: 24px;
+}
+
+/* Buttons with Pink Secondary Color */
+button, .btn {
+    background-color: #E91E63; /* Pink */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 5px;
+}
+
+button:hover, .btn:hover {
+    background-color: #C2185B; /* Darker Pink for hover */
+}
+
+input[type="text"], textarea {
+    background-color: #E3F2FD; /* Very light blue for input fields */
+    border: 1px solid #B3E5FC;
+    color: #1A237E; /* Dark Indigo */
+    padding: 10px;
+    border-radius: 4px;
+    width: 100%;
+}
+
+label {
+    color: #1A237E; /* Dark Indigo */
+}
+
+/* Highlight selected dropdown items in Indigo */
+select {
+    background-color: #3F51B5;
+    color: white;
+    padding: 10px;
+    border: 1px solid #3F51B5;
+    border-radius: 4px;
+}
+
+.dropdown-content {
+    color: #1A237E; /* Dark Indigo */
+}
+
+/* Card/Container styling for sections */
+.card {
+    background-color: white;
+    border: 1px solid #C5CAE9; /* Light Indigo Border */
+    padding: 20px;
+    border-radius: 8px;
+    margin: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Align elements inside containers */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.text-output {
+    color: #1A237E; /* Dark Indigo for output text */
+}
