@@ -13,6 +13,8 @@ DIRECTORY = "./cipher_challenge"
 
 # Initialize Dash app with Material Design theme
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.MATERIA])
+# app = dash.Dash(__name__, external_stylesheets=['/style.css'])
+
 
 # Helper to list files in the cipher_challenge directory
 def list_files():
@@ -64,7 +66,7 @@ app.layout = dbc.Container([
             dbc.Button("Segment Text", id='segment-btn', color="warning", style={'width': '100%', 'marginBottom': '20px'}),
             
             html.H5("Output"),
-            html.Div(id='output-display', style={'whiteSpace': 'pre-line', 'border': '1px solid #ddd', 'padding': '10px', 'height': '150px'}),
+            html.Div(id='buffer-output-display', style={'whiteSpace': 'pre-line', 'border': '1px solid #ddd', 'padding': '10px', 'height': '150px'}),
             
             html.H5("Substitution Alphabet"),
             html.Div(id='alphabet-display', style={'whiteSpace': 'pre-line', 'border': '1px solid #ddd', 'padding': '10px', 'height': '50px'}),
@@ -145,7 +147,7 @@ def segment_text(n_clicks, text):
 # Callback to show the substitution alphabet
 @app.callback(
     Output('alphabet-display', 'value'),
-    Input('cipher-dropdown', 'value') 
+    Input('cipher-type-dropdown', 'value') 
 )
 def update_alphabet_display(cipher_type):
     if cipher_type:
