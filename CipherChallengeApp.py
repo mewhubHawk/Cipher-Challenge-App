@@ -1,8 +1,10 @@
+import os
 import dash
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
-import os
-from ciphers import SubstitutionCipher, WordSegmenter  # Ensure these are defined elsewhere
+from flask import Flask
+
+from ciphers import SubstitutionCipher, WordSegmenter  
 
 # Initialize cipher and segmenter
 cipher = SubstitutionCipher()
@@ -15,112 +17,121 @@ DIRECTORY = "./cipher_challenge"
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.MATERIA])
 # app = dash.Dash(__name__, external_stylesheets=['/style.css'])
 
-
 # Helper to list files in the cipher_challenge directory
 def list_files():
     return [f for f in os.listdir(DIRECTORY) if os.path.isfile(os.path.join(DIRECTORY, f))]
 
-# Define layout with input fields, file selection, text areas, and buttons
 app.layout = html.Div(
-    style={"padding": "20px", "background-color": "#E8EAF6"},  # Indigo-light background
+    style={"padding": "20px", "background-color": "#E8EAF6"},
     children=[
-        html.H1("Cipher Challenge Interface", style={"color": "#3F51B5"}),  # Primary Indigo
+        html.H1("Cipher Challenge Interface", style={"color": "#3F51B5"}),
 
-        # File selection dropdown and display area
+        # File selection and display areas
         html.Label("Select a file:", style={"color": "#3F51B5"}),
         dcc.Dropdown(
             id="file-selector",
             placeholder="Choose a file",
             style={"width": "50%", "margin-bottom": "20px"}
         ),
-        html.Button("Load File", id="load-button", style={"background-color": "#FF4081", "color": "white"}),  # Secondary Pink
+        html.Button("Load File", id="load-button", style={"background-color": "#FF4081", "color": "white"}),
 
-        # Radio options for Encode/Decode and Segmentation Checkbox
+        # Cipher options and alphabet display
         html.Div([
-            html.Label("Operation:", style={"color": "#3F51B5"}),
-            dcc.RadioItems(
-                id="operation-selector",
+            html.Label("Cipher Type:", style={"color": "#3F51B5"}),
+            dcc.Dropdown(
+                id="cipher-type-selector",
                 options=[
-                    {"label": "Encode", "value": "encode"},
-                    {"label": "Decode", "value": "decode"}
+                    {"label": "Caesar", "value": "caesar"},
+                    {"label": "Atbash", "value": "atbash"},
+                    {"label": "Affine", "value": "affine"}
                 ],
-                value="encode",
-                labelStyle={"display": "block", "color": "#3F51B5"}
+                value="caesar",
+                style={"margin-bottom": "20px", "width": "50%"}
             ),
-            dcc.Checklist(
-                id="segmentation-check",
-                options=[{"label": "Segment Text", "value": "segment"}],
-                style={"margin-bottom": "20px", "color": "#3F51B5"}
-            ),
-        ], style={"margin-top": "10px", "margin-bottom": "20px"}),
+            html.Label("Current Decoding Alphabet:", style={"color": "#3F51B5"}),
+            dcc.Textarea(id="alphabet-display", style={"width": "100%", "height": "50px", "background-color": "#E3F2FD"})
+        ], style={"margin-bottom": "20px"}),
 
-        # Text buffer and result display areas
+        # Operation selectors (encode/decode) and segmentation checkbox
+        html.Label("Operation:", style={"color": "#3F51B5"}),
+        dcc.RadioItems(
+            id="operation-selector",
+            options=[
+                {"label": "Encode", "value": "encode"},
+                {"label": "Decode", "value": "decode"}
+            ],
+            value="encode",
+            labelStyle={"display": "block", "color": "#3F51B5"}
+        ),
+        dcc.Checklist(
+            id="segmentation-check",
+            options=[{"label": "Segment Text", "value": "segment"}],
+            style={"margin-bottom": "20px", "color": "#3F51B5"}
+        ),
+
+        # Text buffer and result display
         html.Label("Input Buffer:", style={"color": "#3F51B5"}),
-        dcc.Textarea(id="buffer-input", style={"width": "100%", "height": "100px", "background-color": "#E3F2FD"}),  # Light Indigo
+        dcc.Textarea(id="buffer-input", style={"width": "100%", "height": "100px", "background-color": "#E3F2FD"}),
         html.Label("Processed Output:", style={"color": "#3F51B5"}),
-        dcc.Textarea(id="output-display", style={"width": "100%", "height": "100px", "background-color": "#E3F2FD"}),  # Light Indigo
+        dcc.Textarea(id="processed-output-display", style={"width": "100%", "height": "100px", "background-color": "#E3F2FD"}),
 
-        # Process button
         html.Button("Process", id="process-button", style={"background-color": "#FF4081", "color": "white"})
     ]
 )
 
-# Callback to load the selected file and display contents
+# Store selected cipher type and create a substitution cipher instance
+cipher_instance = SubstitutionCipher(cipher_type="caesar")
+
+# Callback to update text buffer and alphabet display upon file load
 @app.callback(
-    Output('file-content', 'value'),
-    Output('text-buffer', 'value'),
-    Input('load-file-btn', 'n_clicks'),
-    State('file-dropdown', 'value')
+    Output("buffer-input", "value"),
+    # Output("output-display", "value"),
+    Input("load-button", "n_clicks"),
+    State("file-selector", "value")
 )
 def load_file(n_clicks, filename):
-    if n_clicks and filename:  # Only proceed if button is clicked and filename is valid
-        try:
-            path = os.path.join(DIRECTORY, filename)
-            with open(path, 'r') as file:
-                content = file.read()
-            return content, content  # Load content to both 'file-content' and 'text-buffer'
-        except Exception as e:
-            print(f"Error loading file: {e}")
-            return "Error loading file. Please check if the file exists and is readable.", ""
-    return "", ""
+    if n_clicks and filename:
+        with open(f"./cipher_challenge/{filename}", "r") as file:
+            text = file.read()
+        return text
+    return "input file"
 
-# Callback to set cipher parameters and display substitution alphabet
+# Callback for cipher type and alphabet display
 @app.callback(
-    Output('alphabet-display', 'value'),
-    Input('set-cipher-btn', 'n_clicks'),
-    [State('cipher-type-dropdown', 'value'), State('parameter-a', 'value'), State('parameter-b', 'value')]
+    Output("alphabet-display", "value"),
+    Input("cipher-type-selector", "value")
 )
-def update_cipher(n_clicks, cipher_type, a, b):
-    if cipher_type == 'caesar':
-        cipher.reset_cipher_alphabet(cipher_type='caesar', b=b)
-    elif cipher_type == 'affine':
-        cipher.reset_cipher_alphabet(cipher_type='affine', a=a, b=b)
-    substitution_alphabet = cipher.select_substitution_alphabet()
-    alphabet_str = ' '.join(substitution_alphabet.values())
-    # return f"Substitution Alphabet:\n{alphabet_str}"
-    return alphabet_str
+def update_cipher_alphabet(cipher_type):
+    global cipher_instance
+    cipher_instance.set_cipher_alphabet(cipher_type)
+    cipher_alphabet = cipher_instance.select_substitution_alphabet()
+    return ' '.join(val for key, val in cipher_alphabet.items())
 
-
+# Main processing callback
 @app.callback(
-    Output("output-display", "value"),
+    Output("processed-output-display", "value"),
     Input("process-button", "n_clicks"),
     State("buffer-input", "value"),
     State("operation-selector", "value"),
-    State("segmentation-check", "value")
+    State("segmentation-check", "value"),
+    State("cipher-type-selector", "value")
 )
-def process_text(n_clicks, text, operation, segmentation):
+def process_text(n_clicks, text, operation, segmentation, cipher_type):
     if not n_clicks:
         return ""
+    
+    cipher_instance.set_cipher_alphabet(cipher_type)
     result = text
     if operation == "encode":
-        result = SubstitutionCipher().encode(text)
+        result = cipher_instance.encode(text)
     elif operation == "decode":
-        result = SubstitutionCipher().decode(text)
+        result = cipher_instance.decode(text)
     if segmentation:
         result = " ".join(WordSegmenter("dictionary.txt").word_segmentation(result))
+    
     return result
 
-# Populate file list
+# Callback to populate file list
 @app.callback(
     Output("file-selector", "options"),
     Input("load-button", "n_clicks")
@@ -130,9 +141,4 @@ def update_file_list(n_clicks):
     return [{"label": file, "value": file} for file in files if file.endswith('.txt')]
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
-
-
-# Run the Dash app
-if __name__ == '__main__':
     app.run_server(debug=True)
