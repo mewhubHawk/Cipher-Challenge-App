@@ -26,17 +26,18 @@ app.layout = html.Div(
     children=[
         html.H1("Cipher Challenge Interface", style={"color": "#3F51B5"}),
 
-        # File selection and display areas
-        html.H4("Select a file", style={"color": "#3F51B5"}),
+        # File selection and in buffer display
+        dbc.Button("Load File", id='load-button', color="primary", style={'marginTop': '10px', 'marginBottom': '10px'}),
         dcc.Dropdown(
             id="file-selector",
             placeholder="Choose a file",
-            style={"width": "50%", "margin-bottom": "20px"}
+            style={"width": "50%", "margin-bottom": "10px"}
         ),
-        html.Button("Load File", id="load-button", style={"background-color": "#FF4081", "color": "white"}),
+        dcc.Textarea(id="buffer-input", style={"width": "100%", "height": "100px", "background-color": "#E3F2FD"}),
 
-        # Cipher options and alphabet display
-        html.H4("Cipher Type", style={"color": "#3F51B5"}),
+        # Cipher and alphabet display
+        dbc.Button("Set Cipher", id='set-cipher-btn', color="primary", style={'marginTop': '10px', 'marginBottom': '10px'}),
+
         dcc.Dropdown(
             id="cipher-type-selector",
             options=[
@@ -45,42 +46,32 @@ app.layout = html.Div(
                 {"label": "Affine", "value": "affine"}
             ],
             value="caesar",
-            style={"margin-bottom": "20px", "width": "50%"}
+            style={"margin-bottom": "5px", "width": "50%"}
         ),
-
-        html.H4("Current Decoding Alphabet", style={"color": "#3F51B5"}),
-        dcc.Textarea(id="alphabet-display", style={"width": "75%", "height": "50px", "background-color": "#E3F2FD"}),
-
-        html.H4("Cipher Parameters", style={"color": "#3F51B5"}),
         dcc.Input(id='parameter-a', type='number', placeholder="a", value=5, style={'marginLeft': '5px'}),
         dcc.Input(id='parameter-b', type='number', placeholder="b", value=3, style={'marginLeft': '5px'}),
-        dbc.Button("Set Cipher", id='set-cipher-btn', color="primary", style={'marginTop': '10px', 'marginBottom': '20px'}),
 
-        # Operation selectors (encode/decode) and segmentation checkbox
-        html.H4("Operations", style={"color": "#3F51B5"}),
+
+        # Encode/decode and segmentation selection
         dcc.RadioItems(
             id="operation-selector",
             options=[
-                {"label": "Encode", "value": "encode"},
-                {"label": "Decode", "value": "decode"}
+                {"label": "Decode", "value": "decode"},
+                {"label": "Encode", "value": "encode"}
             ],
-            value="encode",
+            value="decode",
             labelStyle={"display": "block", "color": "#3F51B5"}
         ),
         dcc.Checklist(
             id="segmentation-check",
             options=[{"label": "Segment Text", "value": "segment"}],
-            style={"margin-bottom": "20px", "color": "#3F51B5"}
+            style={"margin-bottom": "5px", "color": "#3F51B5"}
         ),
+        dcc.Textarea(id="alphabet-display", style={"width": "75%", "height": "50px", "background-color": "#E3F2FD"}),
 
-        # Text buffer and result display
-        html.Label("Input Buffer:", style={"color": "#3F51B5"}),
-        dcc.Textarea(id="buffer-input", style={"width": "100%", "height": "100px", "background-color": "#E3F2FD"}),
-        html.Label("Processed Output:", style={"color": "#3F51B5"}),
+        # Display output results
+        html.H4("Processed Output", style={"color": "#3F51B5"}),
         dcc.Textarea(id="processed-output-display", style={"width": "100%", "height": "100px", "background-color": "#E3F2FD"}),
-
-        # Process button
-        html.Button("Process", id="process-button", style={"background-color": "#FF4081", "color": "white"})
     ]
 )
 
@@ -120,12 +111,14 @@ def update_cipher(n_clicks, cipher_type, a, b):
         cipher.set_cipher_alphabet(cipher_type='affine', a=a, b=b)
     substitution_alphabet = cipher.select_substitution_alphabet()
     alphabet_str = ' '.join(substitution_alphabet.values())
+    # return f"Substitution Alphabet:\n{alphabet_str}"
     return ' '.join(val for key, val in substitution_alphabet.items())
 
 # Main processing callback
 @app.callback(
     Output("processed-output-display", "value"),
-    Input("process-button", "n_clicks"),
+    # Input("process-button", "n_clicks"),
+    Input('set-cipher-btn', 'n_clicks'),
     State("buffer-input", "value"),
     State("operation-selector", "value"),
     State("segmentation-check", "value"),
