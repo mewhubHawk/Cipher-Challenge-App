@@ -51,7 +51,6 @@ app.layout = html.Div(
         dcc.Input(id='parameter-a', type='number', placeholder="a", value=5, style={'marginLeft': '5px'}),
         dcc.Input(id='parameter-b', type='number', placeholder="b", value=3, style={'marginLeft': '5px'}),
 
-
         # Encode/decode and segmentation selection
         dcc.RadioItems(
             id="operation-selector",
@@ -87,7 +86,6 @@ def update_file_list(n_clicks):
 # Callback to update text buffer and alphabet display upon file load
 @app.callback(
     Output("buffer-input", "value"),
-    # Output("output-display", "value"),
     Input("load-button", "n_clicks"),
     State("file-selector", "value")
 )
@@ -102,7 +100,9 @@ def load_file(n_clicks, filename):
 @app.callback(
     Output('alphabet-display', 'value'),
     Input('set-cipher-btn', 'n_clicks'),
-    [State('cipher-type-selector', 'value'), State('parameter-a', 'value'), State('parameter-b', 'value')]
+    State('cipher-type-selector', 'value'), 
+    State('parameter-a', 'value'), 
+    State('parameter-b', 'value')
 )
 def update_cipher(n_clicks, cipher_type, a, b):
     if cipher_type == 'caesar':
@@ -111,13 +111,11 @@ def update_cipher(n_clicks, cipher_type, a, b):
         cipher.set_cipher_alphabet(cipher_type='affine', a=a, b=b)
     substitution_alphabet = cipher.select_substitution_alphabet()
     alphabet_str = ' '.join(substitution_alphabet.values())
-    # return f"Substitution Alphabet:\n{alphabet_str}"
     return ' '.join(val for key, val in substitution_alphabet.items())
 
 # Main processing callback
 @app.callback(
     Output("processed-output-display", "value"),
-    # Input("process-button", "n_clicks"),
     Input('set-cipher-btn', 'n_clicks'),
     State("buffer-input", "value"),
     State("operation-selector", "value"),
@@ -127,7 +125,6 @@ def update_cipher(n_clicks, cipher_type, a, b):
 def process_text(n_clicks, text, operation, segmentation, cipher_type):
     if not n_clicks:
         return ""
-    
     cipher.set_cipher_alphabet(cipher_type)
     result = text
     if operation == "encode":
@@ -136,9 +133,7 @@ def process_text(n_clicks, text, operation, segmentation, cipher_type):
         result = cipher.decode(text)
     if segmentation:
         result = " ".join(WordSegmenter("dictionary.txt").word_segmentation(result))
-    
     return result
-
 
 if __name__ == "__main__":
     app.run_server(debug=True)
